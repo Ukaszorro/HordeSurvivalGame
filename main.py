@@ -51,10 +51,17 @@ class Enemy(pygame.sprite.Sprite):
         super(Enemy, self).__init__()
         self.surf = pygame.Surface((25, 25))
         self.surf.fill((255, 255, 255))
-        # create enemy at random place
+        # create enemy at random place outside the screen
+        left_side = random.randint(-100, -25)
+        right_side = random.randint(SCREEN_WIDTH + 25, SCREEN_WIDTH + 100)
+        top = random.randint(SCREEN_HEIGHT + 25, SCREEN_HEIGHT + 100)
+        bottom = random.randint(-100, -25)
+        horizontal = (left_side, right_side)
+        vertical = (top, bottom)
         self.rect = self.surf.get_rect(center=(
-            random.randint(25, SCREEN_WIDTH - 25),
-            random.randint(25, SCREEN_HEIGHT - 25)
+            # choose sides randomly
+            horizontal[random.randint(0, 1)],
+            vertical[random.randint(0, 1)]
         ))
 
         self.speed = 5
