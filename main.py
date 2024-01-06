@@ -53,6 +53,7 @@ class Enemy(pygame.sprite.Sprite):
         super(Enemy, self).__init__()
         self.surf = pygame.Surface((25, 25))
         self.surf.fill((255, 255, 255))
+
         # create enemy at random place outside the screen
         left_side = random.randint(-100, -25)
         right_side = random.randint(SCREEN_WIDTH + 25, SCREEN_WIDTH + 100)
@@ -60,11 +61,11 @@ class Enemy(pygame.sprite.Sprite):
         bottom = random.randint(-100, -25)
         horizontal = (left_side, right_side)
         vertical = (top, bottom)
-        self.rect = self.surf.get_rect(center=(
-            # choose sides randomly
-            horizontal[random.randint(0, 1)],
-            vertical[random.randint(0, 1)]
-        ))
+        option1 = (horizontal[random.randint(0, 1)], random.randint(-100, SCREEN_HEIGHT+100))
+        option2 = (random.randint(-100, SCREEN_WIDTH+100), vertical[random.randint(0, 1)])
+        options = (option1, option2)
+        # choose sides randomly
+        self.rect = self.surf.get_rect(center=options[random.randint(0, 1)])
 
         self.speed = 5
 
@@ -122,6 +123,10 @@ class Game():
 
         self.bullets_sprites_list = pygame.sprite.Group()
 
+        # create custom event for adding a new enemy
+        self.ADDENEMY = pygame.USEREVENT + 1
+        pygame.time.set_timer(self.ADDENEMY, 250)
+
         self.game_over = False
 
     def process_events(self):
@@ -140,6 +145,10 @@ class Game():
                     new_bullet = Bullet(self.player.rect, pygame.mouse.get_pos())
                     self.bullets_sprites_list.add(new_bullet)
                     self.all_sprites_list.add(new_bullet)
+            elif event.type == self.ADDENEMY:
+                new_enemy = Enemy()
+                self.all_sprites_list.add(new_enemy)
+                self.enemies_sprites_list.add(new_enemy)
 
         return True
 
