@@ -11,7 +11,8 @@ from pygame.locals import (
     K_s,
     K_a,
     K_d,
-    K_l
+    K_l,
+    MOUSEBUTTONDOWN
 )
 
 SCREEN_WIDTH = 1280
@@ -25,7 +26,7 @@ class Player(pygame.sprite.Sprite):
         self.surf.fill((255, 255, 255))
         self.rect = self.surf.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
 
-    def update(self, pressed_keys):
+    def update(self, pressed_keys, mouse):
         # move player
         if pressed_keys[K_w]:
             self.rect.move_ip(0, -5)
@@ -96,7 +97,27 @@ class Enemy(pygame.sprite.Sprite):
             y = 0
 
         self.rect.move_ip(x, y)
-        print(sinus, angle)
+        # print(sinus, angle)
+
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, player_pos, mouse_pos):
+        super(Bullet, self).__init__()
+        self.player_pos = (player_pos[0] + player_pos[2] / 2, player_pos[1] + player_pos[3] / 2)
+        self.mouse_pos = mouse_pos
+        self.speed = 20
+        self.surf = pygame.Surface((10, 10))
+        self.surf.fill((255, 255, 255))
+        self.rect = self.surf.get_rect(center=(
+            self.player_pos[0],
+            self.player_pos[1]
+        ))
+        angle = math.atan2((self.mouse_pos[1] - self.rect.y), (self.mouse_pos[0] - self.rect.x))
+        self.x = self.speed * math.cos(angle)
+        self.y = self.speed * math.sin(angle)
+
+    def update(self):
+        self.rect.move_ip(self.x, self.y)
 
 
 class Game():
@@ -112,6 +133,8 @@ class Game():
         self.player = Player()
         self.all_sprites_list.add(self.player)
 
+        self.bullets_sprites_list = pygame.sprite.Group()
+
         self.game_over = False
 
     def process_events(self):
@@ -125,6 +148,12 @@ class Game():
                 # restarts game
                 if self.game_over and event.type == K_l:
                     self.__init__()
+            elif event.type == MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    new_bullet = Bullet(self.player.rect, pygame.mouse.get_pos())
+                    self.bullets_sprites_list.add(new_bullet)
+                    self.all_sprites_list.add(new_bullet)
+
         return True
 
     def run_logic(self):
@@ -132,9 +161,13 @@ class Game():
 
         # Get the set of keys pressed and check for user inputda
         pressed_keys = pygame.key.get_pressed()
-        self.player.update(pressed_keys)
+
+        pressed_mouse = pygame.mouse.get_pressed()
+
+        self.player.update(pressed_keys, pygame.mouse)
 
         self.enemies_sprites_list.update((self.player.rect[0], self.player.rect[1]))
+        self.bullets_sprites_list.update()
 
     def display_frame(self, screen):
         """Display everything on the screen"""
@@ -172,3 +205,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# helped with bullet trajectory: https://stackoverflow.com/questions/43951409/pygame-bullet-motion-from-point-a-to-point-b

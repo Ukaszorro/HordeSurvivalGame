@@ -19,16 +19,18 @@ def count_angle(point1, point2):
 
     # measure triangle sides
     adjacent = x2 - x1
+    adjacent = abs(adjacent)
     # avoid dividing by zero
     if adjacent == 0:
         return math.radians(90)
 
     opposite = y2 - y1
+    opposite = abs(opposite)
 
     # count tangent
     tan = opposite / adjacent
     # find angle using arctangent
-    angle = math.atan(tan)
+    angle = math.atan2(opposite, adjacent)
     angle = math.degrees(angle)
 
     # prevent enemy wobbling when angle is value close to 0
