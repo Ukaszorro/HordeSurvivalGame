@@ -38,3 +38,56 @@ def count_angle(point1, point2):
         angle = 0
 
     return angle
+
+
+"""class Enemy(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Enemy, self).__init__()
+        self.surf = pygame.Surface((25, 25))
+        self.surf.fill((255, 255, 255))
+        # create enemy at random place outside the screen
+        left_side = random.randint(-100, -25)
+        right_side = random.randint(SCREEN_WIDTH + 25, SCREEN_WIDTH + 100)
+        top = random.randint(SCREEN_HEIGHT + 25, SCREEN_HEIGHT + 100)
+        bottom = random.randint(-100, -25)
+        horizontal = (left_side, right_side)
+        vertical = (top, bottom)
+        self.rect = self.surf.get_rect(center=(
+            # choose sides randomly
+            horizontal[random.randint(0, 1)],
+            vertical[random.randint(0, 1)]
+        ))
+
+        self.speed = 5
+
+    def update(self, player_position):
+        # get coordinates of player and enemy
+        point1 = player_position[:2]
+        point2 = self.rect[:2]
+
+        angle = count_angle(point1, point2)
+        cosinus = math.cos(angle)
+        sinus = math.sin(angle)
+
+        # count speed on each axis
+        x = cosinus * self.speed
+        y = sinus * self.speed
+
+        # make sure enemy goes in correct direction
+        if (point2[0] - point1[0]) > 0:
+            x = -abs(x)
+        elif (point2[0] - point1[0]) < 0:
+            x = abs(x)
+        else:
+            x = 0
+
+        if (point2[1] - point1[1]) > 0:
+            y = -abs(y)
+        elif (point2[1] - point1[1]) < 0:
+            y = abs(y)
+        else:
+            y = 0
+
+        self.rect.move_ip(x, y)
+        # print(sinus, angle)
+"""

@@ -73,7 +73,7 @@ class Enemy(pygame.sprite.Sprite):
         point1 = player_position[:2]
         point2 = self.rect[:2]
 
-        angle = count_angle(point1, point2)
+        angle = math.atan2(point2[1] - point1[1], point2[0] - point1[0])
         cosinus = math.cos(angle)
         sinus = math.sin(angle)
 
@@ -82,21 +82,8 @@ class Enemy(pygame.sprite.Sprite):
         y = sinus * self.speed
 
         # make sure enemy goes in correct direction
-        if (point2[0] - point1[0]) > 0:
-            x = -abs(x)
-        elif (point2[0] - point1[0]) < 0:
-            x = abs(x)
-        else:
-            x = 0
 
-        if (point2[1] - point1[1]) > 0:
-            y = -abs(y)
-        elif (point2[1] - point1[1]) < 0:
-            y = abs(y)
-        else:
-            y = 0
-
-        self.rect.move_ip(x, y)
+        self.rect.move_ip(-x, -y)
         # print(sinus, angle)
 
 
@@ -205,6 +192,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 # helped with bullet trajectory: https://stackoverflow.com/questions/43951409/pygame-bullet-motion-from-point-a-to-point-b
