@@ -155,14 +155,27 @@ class Game():
     def run_logic(self):
         """method to update positions and check for collisions"""
 
-        # Get the set of keys pressed and check for user inputda
+        # Get the set of keys pressed and check for user input
         pressed_keys = pygame.key.get_pressed()
 
         pressed_mouse = pygame.mouse.get_pressed()
 
         self.player.update(pressed_keys, pygame.mouse)
 
-        self.enemies_sprites_list.update((self.player.rect[0], self.player.rect[1]))
+        #self.enemies_sprites_list.update((self.player.rect[0], self.player.rect[1]))
+        for enemy in self.enemies_sprites_list:
+            placeholder_x = enemy.rect.x
+            placeholder_y = enemy.rect.y
+            temp = pygame.sprite.spritecollideany(enemy, self.enemies_sprites_list)
+            enemy.update((self.player.rect[0], self.player.rect[1]))
+            for other_enemy in self.enemies_sprites_list:
+                if enemy.rect.colliderect(other_enemy.rect) and other_enemy != enemy:
+                    enemy.rect.x, enemy.rect.y = placeholder_x, placeholder_y
+
+
+
+
+
         self.bullets_sprites_list.update()
 
     def display_frame(self, screen):

@@ -1,6 +1,7 @@
 import math
 
-#test
+
+# test
 def distance_points(point1, point2):
     """measure distance between two points"""
     x1, y1 = point1
@@ -90,4 +91,15 @@ def count_angle(point1, point2):
 
         self.rect.move_ip(x, y)
         # print(sinus, angle)
+"""
+
+"""
+        for enemy in self.enemies_sprites_list:
+            placeholder_x = enemy.rect.x
+            placeholder_y = enemy.rect.y
+            temp = pygame.sprite.spritecollideany(enemy, self.enemies_sprites_list)
+            enemy.update((self.player.rect[0], self.player.rect[1]))
+            for other_enemy in self.enemies_sprites_list:
+                if enemy.rect.colliderect(other_enemy.rect) and other_enemy != enemy:
+                    enemy.rect.x, enemy.rect.y = placeholder_x, placeholder_y
 """
