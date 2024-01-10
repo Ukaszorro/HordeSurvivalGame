@@ -1,3 +1,5 @@
+# lines if other enemies blocking path search for different way to player
+
 import pygame
 import random
 import math
@@ -61,8 +63,8 @@ class Enemy(pygame.sprite.Sprite):
         bottom = random.randint(-100, -25)
         horizontal = (left_side, right_side)
         vertical = (top, bottom)
-        option1 = (horizontal[random.randint(0, 1)], random.randint(-100, SCREEN_HEIGHT+100))
-        option2 = (random.randint(-100, SCREEN_WIDTH+100), vertical[random.randint(0, 1)])
+        option1 = (horizontal[random.randint(0, 1)], random.randint(-100, SCREEN_HEIGHT + 100))
+        option2 = (random.randint(-100, SCREEN_WIDTH + 100), vertical[random.randint(0, 1)])
         options = (option1, option2)
         # choose sides randomly
         self.rect = self.surf.get_rect(center=options[random.randint(0, 1)])
@@ -162,7 +164,7 @@ class Game():
 
         self.player.update(pressed_keys, pygame.mouse)
 
-        #self.enemies_sprites_list.update((self.player.rect[0], self.player.rect[1]))
+        # self.enemies_sprites_list.update((self.player.rect[0], self.player.rect[1]))
         for enemy in self.enemies_sprites_list:
             placeholder_x = enemy.rect.x
             placeholder_y = enemy.rect.y
@@ -171,10 +173,6 @@ class Game():
             for other_enemy in self.enemies_sprites_list:
                 if enemy.rect.colliderect(other_enemy.rect) and other_enemy != enemy:
                     enemy.rect.x, enemy.rect.y = placeholder_x, placeholder_y
-
-
-
-
 
         self.bullets_sprites_list.update()
 
