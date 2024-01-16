@@ -69,7 +69,7 @@ class Enemy(pygame.sprite.Sprite):
         # choose sides randomly
         self.rect = self.surf.get_rect(center=options[random.randint(0, 1)])
 
-        self.speed = 5
+        self.speed = 3
 
     def update(self, player_position):
         # get coordinates of player and enemy
@@ -127,7 +127,7 @@ class Game():
 
         # create custom event for adding a new enemy
         self.ADDENEMY = pygame.USEREVENT + 1
-        pygame.time.set_timer(self.ADDENEMY, 250)
+        pygame.time.set_timer(self.ADDENEMY, 150)
 
         self.game_over = False
 
@@ -140,7 +140,7 @@ class Game():
                 if event.key == K_ESCAPE:
                     return False
                 # restarts game
-                if self.game_over and event.type == K_l:
+                if self.game_over and event.key == K_l:
                     self.__init__()
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
@@ -170,9 +170,18 @@ class Game():
             placeholder_y = enemy.rect.y
             temp = pygame.sprite.spritecollideany(enemy, self.enemies_sprites_list)
             enemy.update((self.player.rect[0], self.player.rect[1]))
-            for other_enemy in self.enemies_sprites_list:
-                if enemy.rect.colliderect(other_enemy.rect) and other_enemy != enemy:
-                    enemy.rect.x, enemy.rect.y = placeholder_x, placeholder_y
+
+            if pygame.sprite.spritecollide(enemy, self.enemies_sprites_list, 0) \
+                    and pygame.sprite.spritecollide(enemy, self.enemies_sprites_list, 0) != [enemy]:
+                enemy.rect.x, enemy.rect.y = placeholder_x, placeholder_y
+
+            if pygame.sprite.spritecollide(enemy, self.bullets_sprites_list, 0):
+                bullet = pygame.sprite.spritecollide(enemy, self.bullets_sprites_list, 0)
+                bullet[0].kill()
+                enemy.kill()
+
+        if pygame.sprite.spritecollide(self.player, self.enemies_sprites_list, 0):
+            self.game_over = True
 
         self.bullets_sprites_list.update()
 
@@ -181,7 +190,10 @@ class Game():
         screen.fill((0, 0, 0))
         if self.game_over:
             font = pygame.font.SysFont("Serif", 25)
-            text = font.render("Game over", True, (0, 0, 0))
+            text = font.render("Game over", True, (255, 255, 255))
+            center_x = (SCREEN_WIDTH // 2) - (text.get_width() // 2)
+            center_y = (SCREEN_HEIGHT // 2) - (text.get_height() // 2)
+            screen.blit(text, [center_x, center_y])
         else:
             # draw all sprites
             for entity in self.all_sprites_list:
@@ -206,6 +218,7 @@ def main():
         game.run_logic()
         game.display_frame(screen)
         clock.tick(60)
+        # print(clock.get_fps())
 
     pygame.quit()
 
@@ -214,3 +227,10 @@ if __name__ == "__main__":
     main()
 
 # helped with bullet trajectory: https://stackoverflow.com/questions/43951409/pygame-bullet-motion-from-point-a-to-point-b
+
+
+"""
+for other_enemy in self.enemies_sprites_list:
+    if enemy.rect.colliderect(other_enemy.rect) and other_enemy != enemy:
+        enemy.rect.x, enemy.rect.y = placeholder_x, placeholder_y
+"""
