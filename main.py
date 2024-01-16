@@ -3,6 +3,7 @@
 import pygame
 import random
 import math
+import time
 from math_functions import count_angle
 
 from pygame.locals import (
@@ -127,9 +128,12 @@ class Game():
 
         # create custom event for adding a new enemy
         self.ADDENEMY = pygame.USEREVENT + 1
-        pygame.time.set_timer(self.ADDENEMY, 150)
+        pygame.time.set_timer(self.ADDENEMY, 500)
 
         self.game_over = False
+        self.score = 0
+        self.start = time.time()
+        self.finish = time.time()
 
     def process_events(self):
         """method to process all events. Returns False to close the window"""
@@ -166,21 +170,26 @@ class Game():
 
         # self.enemies_sprites_list.update((self.player.rect[0], self.player.rect[1]))
         for enemy in self.enemies_sprites_list:
+            # remember the last position in case there will be a collision
             placeholder_x = enemy.rect.x
             placeholder_y = enemy.rect.y
-            temp = pygame.sprite.spritecollideany(enemy, self.enemies_sprites_list)
             enemy.update((self.player.rect[0], self.player.rect[1]))
 
+            # check if enemies collide with each other
             if pygame.sprite.spritecollide(enemy, self.enemies_sprites_list, 0) \
                     and pygame.sprite.spritecollide(enemy, self.enemies_sprites_list, 0) != [enemy]:
                 enemy.rect.x, enemy.rect.y = placeholder_x, placeholder_y
 
+            # check if bullet hit enemy
             if pygame.sprite.spritecollide(enemy, self.bullets_sprites_list, 0):
                 bullet = pygame.sprite.spritecollide(enemy, self.bullets_sprites_list, 0)
                 bullet[0].kill()
                 enemy.kill()
+                self.score += 1
 
         if pygame.sprite.spritecollide(self.player, self.enemies_sprites_list, 0):
+            if not self.game_over:
+                self.finish = time.time()
             self.game_over = True
 
         self.bullets_sprites_list.update()
@@ -188,9 +197,10 @@ class Game():
     def display_frame(self, screen):
         """Display everything on the screen"""
         screen.fill((0, 0, 0))
+        # game over screen
         if self.game_over:
             font = pygame.font.SysFont("Serif", 25)
-            text = font.render("Game over", True, (255, 255, 255))
+            text = font.render(f"Game over Score: {self.score} Time: {self.finish - self.start}", True, (255, 255, 255))
             center_x = (SCREEN_WIDTH // 2) - (text.get_width() // 2)
             center_y = (SCREEN_HEIGHT // 2) - (text.get_height() // 2)
             screen.blit(text, [center_x, center_y])
@@ -198,6 +208,12 @@ class Game():
             # draw all sprites
             for entity in self.all_sprites_list:
                 screen.blit(entity.surf, entity.rect)
+
+            font = pygame.font.SysFont("Serif", 25)
+            text = font.render(f"Score: {self.score} Time: {round(time.time() - self.start, 2)}", True,
+                               (255, 255, 255))
+            screen.blit(text, [0, 0])
+
 
         pygame.display.flip()
 
