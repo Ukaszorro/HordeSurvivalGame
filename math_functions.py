@@ -41,6 +41,28 @@ def count_angle(point1, point2):
     return angle
 
 
+def arch_angle(radius, arch):
+    if radius == 0:
+        radius = 1
+
+    angle = arch / radius
+    return angle
+
+
+def find_point_circle(center, point1, arch, radius):
+    angle_p1_p2 = arch_angle(radius, arch)
+    x = center[0] + (point1[0] - center[0]) * math.cos(math.radians(angle_p1_p2)) - (point1[1] - center[1]) * math.sin(
+        math.radians(angle_p1_p2))
+    y = center[1] + (point1[0] - center[0]) * math.sin(math.radians(angle_p1_p2)) + (point1[1] - center[1]) * math.cos(
+        math.radians(angle_p1_p2))
+
+    return x, y
+
+
+def hypotenuse(a, b):
+    return math.sqrt(math.pow(a, 2) + math.pow(b, 2))
+
+
 """class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super(Enemy, self).__init__()
@@ -103,3 +125,8 @@ def count_angle(point1, point2):
                 if enemy.rect.colliderect(other_enemy.rect) and other_enemy != enemy:
                     enemy.rect.x, enemy.rect.y = placeholder_x, placeholder_y
 """
+
+angle = arch_angle(1, 5)
+print(angle)
+
+# https://math.stackexchange.com/questions/296051/given-one-endpoint-on-an-arc-of-a-circle-and-the-radius-and-arc-angle-how-to-ca

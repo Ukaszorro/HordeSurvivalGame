@@ -4,7 +4,7 @@ import pygame
 import random
 import math
 import time
-from math_functions import count_angle
+from math_functions import count_angle, find_point_circle, distance_points, hypotenuse
 
 from pygame.locals import (
     K_ESCAPE,
@@ -70,7 +70,43 @@ class Enemy(pygame.sprite.Sprite):
         # choose sides randomly
         self.rect = self.surf.get_rect(center=options[random.randint(0, 1)])
 
-        self.speed = 3
+        self.speed = random.randint(2, 3)
+
+    def update(self, player_position, distance=0):
+        if distance == 0:
+            distance = self.speed
+        else:
+            print(distance)
+
+        # get coordinates of player and enemy
+        point1 = player_position[:2]
+        point2 = self.rect[:2]
+
+        angle = math.atan2(point2[1] - point1[1], point2[0] - point1[0])
+        cosinus = math.cos(angle)
+        sinus = math.sin(angle)
+
+        # count speed on each axis
+        x = cosinus * distance
+        y = sinus * distance
+
+        # make sure enemy goes in correct direction
+
+        self.rect.move_ip(-x, -y)
+        # print(sinus, angle)
+
+
+class Enemy2(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Enemy2, self).__init__()
+        self.surf = pygame.Surface((25, 25))
+        self.surf.fill((100, 100, 100))
+
+        # choose sides randomly
+        self.rect = self.surf.get_rect(
+            center=(random.randint(25, SCREEN_WIDTH - 25), random.randint(25, SCREEN_HEIGHT + 25)))
+
+        self.speed = random.randint(2, 3)
 
     def update(self, player_position):
         # get coordinates of player and enemy
@@ -121,6 +157,9 @@ class Game():
         self.all_sprites_list.add(self.new_enemy)
         self.enemies_sprites_list.add(self.new_enemy)
 
+        self.dummy = Enemy2()
+        self.all_sprites_list.add(self.dummy)
+
         self.player = Player()
         self.all_sprites_list.add(self.player)
 
@@ -167,6 +206,7 @@ class Game():
         pressed_mouse = pygame.mouse.get_pressed()
 
         self.player.update(pressed_keys, pygame.mouse)
+        print(self.player.rect[:2])
 
         # self.enemies_sprites_list.update((self.player.rect[0], self.player.rect[1]))
         for enemy in self.enemies_sprites_list:
@@ -178,21 +218,37 @@ class Game():
             # check if enemies collide with each other
             if pygame.sprite.spritecollide(enemy, self.enemies_sprites_list, 0) \
                     and pygame.sprite.spritecollide(enemy, self.enemies_sprites_list, 0) != [enemy]:
+
+                collided_enemy = pygame.sprite.spritecollide(enemy, self.enemies_sprites_list, 0)[1]
                 enemy.rect.x, enemy.rect.y = placeholder_x, placeholder_y
+
+                enemy.speed = -enemy.speed
+                enemy.update(collided_enemy.rect[:2])
+                enemy.speed = -enemy.speed
+
+                point = find_point_circle(self.player.rect[:2], enemy.rect[:2], enemy.speed,
+                                          distance_points(self.player.rect[:2], enemy.rect[:2]))
+                enemy.update(point)
+
 
             # check if bullet hit enemy
             if pygame.sprite.spritecollide(enemy, self.bullets_sprites_list, 0):
                 bullet = pygame.sprite.spritecollide(enemy, self.bullets_sprites_list, 0)
                 bullet[0].kill()
                 enemy.kill()
-                self.score += 1
+                if not self.game_over:
+                    self.score += 1
 
         if pygame.sprite.spritecollide(self.player, self.enemies_sprites_list, 0):
+            pygame.sprite.spritecollide(self.player, self.enemies_sprites_list, 0)[0].kill()
             if not self.game_over:
                 self.finish = time.time()
             self.game_over = True
 
         self.bullets_sprites_list.update()
+        point = find_point_circle(self.player.rect[:2], self.dummy.rect[:2], self.dummy.speed,
+                                  distance_points(self.player.rect[:2], self.dummy.rect[:2]))
+        self.dummy.update(point)
 
     def display_frame(self, screen):
         """Display everything on the screen"""
@@ -200,7 +256,8 @@ class Game():
         # game over screen
         if self.game_over:
             font = pygame.font.SysFont("Serif", 25)
-            text = font.render(f"Game over Score: {self.score} Time: {self.finish - self.start}", True, (255, 255, 255))
+            text = font.render(f"""Game over\n Score: {self.score} Time: {round(self.finish - self.start, 2)}""", True,
+                               (255, 255, 255))
             center_x = (SCREEN_WIDTH // 2) - (text.get_width() // 2)
             center_y = (SCREEN_HEIGHT // 2) - (text.get_height() // 2)
             screen.blit(text, [center_x, center_y])
@@ -214,7 +271,12 @@ class Game():
                                (255, 255, 255))
             screen.blit(text, [0, 0])
 
+        # pygame.draw.circle(screen, (255, 255, 255), self.player.rect[:2],
+        #                    distance_points(self.player.rect[:2], self.dummy.rect[:2]))
+        point = find_point_circle(self.player.rect[:2], self.dummy.rect[:2], self.dummy.speed,
+                                  distance_points(self.player.rect[:2], self.dummy.rect[:2]))
 
+        # pygame.draw.rect(screen, (10, 200, 140), point + (25, 25))
         pygame.display.flip()
 
 
