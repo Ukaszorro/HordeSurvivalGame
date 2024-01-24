@@ -7,6 +7,7 @@ import time
 from math_functions import count_angle, find_point_circle, distance_points, hypotenuse
 from tiles import Level
 from settings import *
+from support import import_folder
 
 from pygame.locals import (
     K_ESCAPE,
@@ -20,6 +21,7 @@ from pygame.locals import (
     MOUSEBUTTONDOWN
 )
 
+
 # SCREEN_WIDTH = 1280
 # SCREEN_HEIGHT = 720
 
@@ -27,13 +29,36 @@ from pygame.locals import (
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player, self).__init__()
-        player_image = pygame.transform.scale(pygame.image.load("images/Top_Down_Survivor/handgun/idle/survivor-idle_handgun_0.png"), (75, 75))
+        self.import_assets()
+        self.frame_index = 0
+        self.animations_speed = 0.5
+        player_image = pygame.transform.scale(self.animations['idle'][self.frame_index], (75, 75))
         self.surf = player_image
         self.rect = self.surf.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
-        self.rect.width = 50
-        self.rect.height = 50
+        self.rect.width = 25
+        self.rect.height = 25
+
+    def import_assets(self):
+        character_path = "images/Top_Down_Survivor/handgun/"
+        self.animations = {'idle': [], 'move': [], 'shoot': []}
+
+        for animation in self.animations.keys():
+            full_path = character_path + animation
+            self.animations[animation] = import_folder(full_path)
+
+    def animate(self):
+        animation = self.animations['idle']
+
+        # loop over frame index
+        self.frame_index += self.animations_speed
+        if self.frame_index >= len(animation):
+            self.frame_index = 0
+
+        self.surf = pygame.transform.scale(animation[int(self.frame_index)], (75, 75))
 
     def update(self, pressed_keys, mouse):
+
+        self.animate()
         # move player
         if pressed_keys[K_w]:
             self.rect.move_ip(0, -5)
@@ -58,9 +83,10 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super(Enemy, self).__init__()
-        enemy_image = pygame.transform.scale(pygame.image.load("images/zombie/skeleton-idle_0.png"), (75, 75))
+        enemy_image = pygame.transform.scale(pygame.image.load("images/zombie/skeleton-idle_0.png").convert_alpha(),
+                                             (75, 75))
         self.surf = enemy_image
-        #self.surf.fill((255, 255, 255))
+        # self.surf.fill((255, 255, 255))
 
         # create enemy at random place outside the screen
         left_side = random.randint(-100, -25)
@@ -284,7 +310,6 @@ class Game():
         #                    distance_points(self.player.rect[:2], self.dummy.rect[:2]))
         point = find_point_circle(self.player.rect[:2], self.dummy.rect[:2], self.dummy.speed,
                                   distance_points(self.player.rect[:2], self.dummy.rect[:2]))
-
 
         # pygame.draw.rect(screen, (10, 200, 140), point + (25, 25))
         pygame.display.flip()
