@@ -33,8 +33,10 @@ class Player(pygame.sprite.Sprite):
         self.frame_index = 0
         self.animations_speed = 0.5
         player_image = pygame.transform.scale(self.animations['idle'][self.frame_index], (75, 75))
-        self.surf = player_image
-        self.rect = self.surf.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
+        self.image = player_image
+        self.rect = self.image.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
+        self.mask = pygame.mask.from_surface(self.image)
+        self.mask_image = self.mask.to_surface()
 
     def import_assets(self):
         character_path = "images/Top_Down_Survivor/handgun/"
@@ -52,8 +54,8 @@ class Player(pygame.sprite.Sprite):
         if self.frame_index >= len(animation):
             self.frame_index = 0
 
-        self.surf = pygame.transform.scale(animation[int(self.frame_index)], (75, 75)).convert_alpha()
-        self.original_image = self.surf
+        self.image = pygame.transform.scale(animation[int(self.frame_index)], (75, 75)).convert_alpha()
+        self.original_image = self.image
 
     def rotate(self, mouse_pos):
         """rotate the player to always face mouse position"""
@@ -61,10 +63,10 @@ class Player(pygame.sprite.Sprite):
         angle = math.atan2(mouse_pos[1] - self.rect[1], mouse_pos[0] - self.rect[0])
         angle = -math.degrees(angle)
         rotated_image = pygame.transform.rotate(self.original_image, angle).convert_alpha()
-        self.surf = rotated_image
+        self.image = rotated_image
         # keep rect at the same location
-        mask = pygame.mask.from_surface(self.surf)
-        self.rect = mask.get_rect(center=self.rect.center)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.mask.get_rect(center=self.rect.center)
         self.rect = self.rect.inflate(-50, -50)
         print(self.rect)
 
@@ -103,9 +105,9 @@ class Enemy(pygame.sprite.Sprite):
         enemy_image = pygame.transform.scale(
             pygame.image.load("images/zombie/idle/skeleton-idle_0.png").convert_alpha(),
             (75, 75))
-        self.surf = enemy_image
-        # self.surf.fill((255, 255, 255))
-
+        self.image = enemy_image
+        # self.image.fill((255, 255, 255))
+        
         # create enemy at random place outside the screen
         left_side = random.randint(-100, -25)
         right_side = random.randint(SCREEN_WIDTH + 25, SCREEN_WIDTH + 100)
@@ -117,7 +119,9 @@ class Enemy(pygame.sprite.Sprite):
         option2 = (random.randint(-100, SCREEN_WIDTH + 100), vertical[random.randint(0, 1)])
         options = (option1, option2)
         # choose sides randomly
-        self.rect = self.surf.get_rect(center=options[random.randint(0, 1)])
+        self.rect = self.image.get_rect(center=options[random.randint(0, 1)])
+
+        self.mask = pygame.mask.from_surface(self.image)
 
         self.speed = random.randint(2, 3)
         self.animations_speed = 0.1 * self.speed
@@ -138,13 +142,26 @@ class Enemy(pygame.sprite.Sprite):
         if self.frame_index >= len(animation):
             self.frame_index = 0
 
-        self.surf = pygame.transform.scale(animation[int(self.frame_index)], (75, 75)).convert_alpha()
-        self.original_image = self.surf
-        mask = pygame.mask.from_surface(self.surf)
+        self.image = pygame.transform.scale(animation[int(self.frame_index)], (75, 75)).convert_alpha()
+        self.original_image = self.image
+        mask = pygame.mask.from_surface(self.image)
         self.rect = mask.get_rect(center=self.rect.center)
+
+
+    def rotate(self, pos):
+        """rotate the player to always face mouse position"""
+        # the angle between mous_pos and player_pos
+        angle = math.atan2(pos[1] - self.rect[1], pos[0] - self.rect[0])
+        angle = -math.degrees(angle)
+        rotated_image = pygame.transform.rotate(self.original_image, angle).convert_alpha()
+        self.image = rotated_image
+        # keep rect at the same location
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect = self.mask.get_rect(center=self.rect.center)
 
     def update(self, player_position, distance=0):
         self.animate()
+        self.rotate(player_position)
 
         if distance == 0:
             distance = self.speed
@@ -172,11 +189,11 @@ class Enemy(pygame.sprite.Sprite):
 class Enemy2(pygame.sprite.Sprite):
     def __init__(self):
         super(Enemy2, self).__init__()
-        self.surf = pygame.Surface((25, 25))
-        self.surf.fill((100, 100, 100))
+        self.image = pygame.Surface((25, 25))
+        self.image.fill((100, 100, 100))
 
         # choose sides randomly
-        self.rect = self.surf.get_rect(
+        self.rect = self.image.get_rect(
             center=(random.randint(25, SCREEN_WIDTH - 25), random.randint(25, SCREEN_HEIGHT + 25)))
 
         self.speed = random.randint(2, 3)
@@ -206,12 +223,15 @@ class Bullet(pygame.sprite.Sprite):
         self.player_pos = (player_pos[0] + player_pos[2] / 2, player_pos[1] + player_pos[3] / 2)
         self.mouse_pos = mouse_pos
         self.speed = 20
-        self.surf = pygame.Surface((10, 10))
-        self.surf.fill((255, 255, 255))
-        self.rect = self.surf.get_rect(center=(
+        self.image = pygame.Surface((10, 10))
+        self.image.fill((255, 255, 255))
+        self.rect = self.image.get_rect(center=(
             self.player_pos[0],
             self.player_pos[1]
         ))
+
+        self.mask = pygame.mask.from_surface(self.image)
+
         angle = math.atan2((self.mouse_pos[1] - self.rect.y), (self.mouse_pos[0] - self.rect.x))
         self.x = self.speed * math.cos(angle)
         self.y = self.speed * math.sin(angle)
@@ -293,29 +313,33 @@ class Game():
             if pygame.sprite.spritecollide(enemy, self.enemies_sprites_list, 0) \
                     and pygame.sprite.spritecollide(enemy, self.enemies_sprites_list, 0) != [enemy]:
                 collided_enemy = pygame.sprite.spritecollide(enemy, self.enemies_sprites_list, 0)[1]
-                enemy.rect.x, enemy.rect.y = placeholder_x, placeholder_y
+                if pygame.sprite.collide_mask(collided_enemy, enemy):
+                    enemy.rect.x, enemy.rect.y = placeholder_x, placeholder_y
 
-                enemy.speed = -enemy.speed
-                enemy.update(collided_enemy.rect[:2])
-                enemy.speed = -enemy.speed
+                    enemy.speed = -enemy.speed
+                    enemy.update(collided_enemy.rect[:2])
+                    enemy.speed = -enemy.speed
 
-                point = find_point_circle(self.player.rect[:2], enemy.rect[:2], enemy.speed,
-                                          distance_points(self.player.rect[:2], enemy.rect[:2]))
-                enemy.update(point)
+                    point = find_point_circle(self.player.rect[:2], enemy.rect[:2], enemy.speed,
+                                              distance_points(self.player.rect[:2], enemy.rect[:2]))
+                    enemy.update(point)
 
             # check if bullet hit enemy
             if pygame.sprite.spritecollide(enemy, self.bullets_sprites_list, 0):
-                bullet = pygame.sprite.spritecollide(enemy, self.bullets_sprites_list, 0)
-                bullet[0].kill()
-                enemy.kill()
-                if not self.game_over:
-                    self.score += 1
+                bullet = pygame.sprite.spritecollide(enemy, self.bullets_sprites_list, 0)[0]
+                if pygame.sprite.collide_mask(bullet, enemy):
+                    bullet.kill()
+                    enemy.kill()
+                    if not self.game_over:
+                        self.score += 1
 
         if pygame.sprite.spritecollide(self.player, self.enemies_sprites_list, 0):
-            pygame.sprite.spritecollide(self.player, self.enemies_sprites_list, 0)[0].kill()
-            if not self.game_over:
-                self.finish = time.time()
-            self.game_over = True
+            enemy_k = pygame.sprite.spritecollide(self.player, self.enemies_sprites_list, 0)[0]
+            if pygame.sprite.collide_mask(enemy_k, self.player):
+                pygame.sprite.spritecollide(self.player, self.enemies_sprites_list, 0)[0].kill()
+                if not self.game_over:
+                    self.finish = time.time()
+                self.game_over = True
 
         self.bullets_sprites_list.update()
         point = find_point_circle(self.player.rect[:2], self.dummy.rect[:2], self.dummy.speed,
@@ -325,6 +349,7 @@ class Game():
     def display_frame(self):
         """Display everything on the screen"""
         self.screen.fill((0, 0, 0))
+
 
         # game over screen
         if self.game_over:
@@ -337,7 +362,8 @@ class Game():
         else:
             # draw all sprites
             for entity in self.all_sprites_list:
-                self.screen.blit(entity.surf, entity.rect)
+                self.screen.blit(entity.image, entity.rect)
+                #pygame.draw.rect(self.screen, (10, 200, 140), entity.rect)
 
             self.level.run()
             font = pygame.font.SysFont("Serif", 25)
@@ -350,7 +376,7 @@ class Game():
         # point = find_point_circle(self.player.rect[:2], self.dummy.rect[:2], self.dummy.speed,
         #                           distance_points(self.player.rect[:2], self.dummy.rect[:2]))
 
-        pygame.draw.rect(self.screen, (10, 200, 140), self.player.rect)
+        #pygame.draw.rect(self.screen, (10, 200, 140), self.player.rect)
         pygame.display.flip()
 
 
