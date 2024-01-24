@@ -83,7 +83,12 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super(Enemy, self).__init__()
-        enemy_image = pygame.transform.scale(pygame.image.load("images/zombie/skeleton-idle_0.png").convert_alpha(),
+
+        self.import_assets()
+        self.frame_index = 0
+
+
+        enemy_image = pygame.transform.scale(pygame.image.load("images/zombie/idle/skeleton-idle_0.png").convert_alpha(),
                                              (75, 75))
         self.surf = enemy_image
         # self.surf.fill((255, 255, 255))
@@ -105,8 +110,29 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.height = 50
 
         self.speed = random.randint(2, 3)
+        self.animations_speed = 0.1 * self.speed
+
+    def import_assets(self):
+        character_path = "images/zombie/"
+        self.animations = {'idle': [], 'move': [], 'attack': []}
+
+        for animation in self.animations.keys():
+            full_path = character_path + animation
+            self.animations[animation] = import_folder(full_path)
+
+    def animate(self):
+        animation = self.animations['move']
+
+        # loop over frame index
+        self.frame_index += self.animations_speed
+        if self.frame_index >= len(animation):
+            self.frame_index = 0
+
+        self.surf = pygame.transform.scale(animation[int(self.frame_index)], (75, 75))
 
     def update(self, player_position, distance=0):
+        self.animate()
+
         if distance == 0:
             distance = self.speed
         else:

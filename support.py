@@ -16,6 +16,7 @@ def human_sorting(text):
 def import_folder(path):
     surface_list = []
 
+    # walk through directory, turn images in that directory to surfaces, add them to the list
     for first, second, img_files in walk(path):
         img_files.sort(key=human_sorting)
         for image in img_files:
