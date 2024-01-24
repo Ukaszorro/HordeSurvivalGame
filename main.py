@@ -5,6 +5,8 @@ import random
 import math
 import time
 from math_functions import count_angle, find_point_circle, distance_points, hypotenuse
+from tiles import Level
+from settings import *
 
 from pygame.locals import (
     K_ESCAPE,
@@ -18,15 +20,15 @@ from pygame.locals import (
     MOUSEBUTTONDOWN
 )
 
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 720
+# SCREEN_WIDTH = 1280
+# SCREEN_HEIGHT = 720
 
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player, self).__init__()
-        self.surf = pygame.Surface((25, 25))
-        self.surf.fill((255, 255, 255))
+        player_image = pygame.transform.scale(pygame.image.load("images/Top_Down_Survivor/handgun/idle/survivor-idle_handgun_0.png"), (75, 75))
+        self.surf = player_image
         self.rect = self.surf.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
 
     def update(self, pressed_keys, mouse):
@@ -148,7 +150,9 @@ class Bullet(pygame.sprite.Sprite):
 
 
 class Game():
-    def __init__(self):
+    def __init__(self, screen):
+        self.screen = screen
+        self.level = Level(level_map, self.screen)
         # create sprite lists
         self.all_sprites_list = pygame.sprite.Group()
         self.enemies_sprites_list = pygame.sprite.Group()
@@ -184,7 +188,7 @@ class Game():
                     return False
                 # restarts game
                 if self.game_over and event.key == K_l:
-                    self.__init__()
+                    self.__init__(self.screen)
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
                     new_bullet = Bullet(self.player.rect, pygame.mouse.get_pos())
@@ -206,7 +210,6 @@ class Game():
         pressed_mouse = pygame.mouse.get_pressed()
 
         self.player.update(pressed_keys, pygame.mouse)
-        print(self.player.rect[:2])
 
         # self.enemies_sprites_list.update((self.player.rect[0], self.player.rect[1]))
         for enemy in self.enemies_sprites_list:
@@ -218,7 +221,6 @@ class Game():
             # check if enemies collide with each other
             if pygame.sprite.spritecollide(enemy, self.enemies_sprites_list, 0) \
                     and pygame.sprite.spritecollide(enemy, self.enemies_sprites_list, 0) != [enemy]:
-
                 collided_enemy = pygame.sprite.spritecollide(enemy, self.enemies_sprites_list, 0)[1]
                 enemy.rect.x, enemy.rect.y = placeholder_x, placeholder_y
 
@@ -229,7 +231,6 @@ class Game():
                 point = find_point_circle(self.player.rect[:2], enemy.rect[:2], enemy.speed,
                                           distance_points(self.player.rect[:2], enemy.rect[:2]))
                 enemy.update(point)
-
 
             # check if bullet hit enemy
             if pygame.sprite.spritecollide(enemy, self.bullets_sprites_list, 0):
@@ -250,9 +251,10 @@ class Game():
                                   distance_points(self.player.rect[:2], self.dummy.rect[:2]))
         self.dummy.update(point)
 
-    def display_frame(self, screen):
+    def display_frame(self):
         """Display everything on the screen"""
-        screen.fill((0, 0, 0))
+        self.screen.fill((0, 0, 0))
+
         # game over screen
         if self.game_over:
             font = pygame.font.SysFont("Serif", 25)
@@ -260,21 +262,23 @@ class Game():
                                (255, 255, 255))
             center_x = (SCREEN_WIDTH // 2) - (text.get_width() // 2)
             center_y = (SCREEN_HEIGHT // 2) - (text.get_height() // 2)
-            screen.blit(text, [center_x, center_y])
+            self.screen.blit(text, [center_x, center_y])
         else:
             # draw all sprites
             for entity in self.all_sprites_list:
-                screen.blit(entity.surf, entity.rect)
+                self.screen.blit(entity.surf, entity.rect)
 
+            self.level.run()
             font = pygame.font.SysFont("Serif", 25)
             text = font.render(f"Score: {self.score} Time: {round(time.time() - self.start, 2)}", True,
                                (255, 255, 255))
-            screen.blit(text, [0, 0])
+            self.screen.blit(text, [0, 0])
 
         # pygame.draw.circle(screen, (255, 255, 255), self.player.rect[:2],
         #                    distance_points(self.player.rect[:2], self.dummy.rect[:2]))
         point = find_point_circle(self.player.rect[:2], self.dummy.rect[:2], self.dummy.speed,
                                   distance_points(self.player.rect[:2], self.dummy.rect[:2]))
+
 
         # pygame.draw.rect(screen, (10, 200, 140), point + (25, 25))
         pygame.display.flip()
@@ -289,12 +293,12 @@ def main():
     clock = pygame.time.Clock()
 
     running = True
-    game = Game()
+    game = Game(screen)
 
     while running:
         running = game.process_events()
         game.run_logic()
-        game.display_frame(screen)
+        game.display_frame()
         clock.tick(60)
         # print(clock.get_fps())
 
