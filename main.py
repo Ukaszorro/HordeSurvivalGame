@@ -30,6 +30,8 @@ class Player(pygame.sprite.Sprite):
         player_image = pygame.transform.scale(pygame.image.load("images/Top_Down_Survivor/handgun/idle/survivor-idle_handgun_0.png"), (75, 75))
         self.surf = player_image
         self.rect = self.surf.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
+        self.rect.width = 50
+        self.rect.height = 50
 
     def update(self, pressed_keys, mouse):
         # move player
@@ -56,8 +58,9 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super(Enemy, self).__init__()
-        self.surf = pygame.Surface((25, 25))
-        self.surf.fill((255, 255, 255))
+        enemy_image = pygame.transform.scale(pygame.image.load("images/zombie/skeleton-idle_0.png"), (75, 75))
+        self.surf = enemy_image
+        #self.surf.fill((255, 255, 255))
 
         # create enemy at random place outside the screen
         left_side = random.randint(-100, -25)
@@ -71,6 +74,9 @@ class Enemy(pygame.sprite.Sprite):
         options = (option1, option2)
         # choose sides randomly
         self.rect = self.surf.get_rect(center=options[random.randint(0, 1)])
+
+        self.rect.width = 50
+        self.rect.height = 50
 
         self.speed = random.randint(2, 3)
 
