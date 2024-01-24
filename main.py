@@ -35,8 +35,6 @@ class Player(pygame.sprite.Sprite):
         player_image = pygame.transform.scale(self.animations['idle'][self.frame_index], (75, 75))
         self.surf = player_image
         self.rect = self.surf.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
-        self.rect.width = 25
-        self.rect.height = 25
 
     def import_assets(self):
         character_path = "images/Top_Down_Survivor/handgun/"
@@ -54,11 +52,26 @@ class Player(pygame.sprite.Sprite):
         if self.frame_index >= len(animation):
             self.frame_index = 0
 
-        self.surf = pygame.transform.scale(animation[int(self.frame_index)], (75, 75))
+        self.surf = pygame.transform.scale(animation[int(self.frame_index)], (75, 75)).convert_alpha()
+        self.original_image = self.surf
+
+    def rotate(self, mouse_pos):
+        """rotate the player to always face mouse position"""
+        # the angle between mous_pos and player_pos
+        angle = math.atan2(mouse_pos[1] - self.rect[1], mouse_pos[0] - self.rect[0])
+        angle = -math.degrees(angle)
+        rotated_image = pygame.transform.rotate(self.original_image, angle).convert_alpha()
+        self.surf = rotated_image
+        # keep rect at the same location
+        mask = pygame.mask.from_surface(self.surf)
+        self.rect = mask.get_rect(center=self.rect.center)
+        self.rect = self.rect.inflate(-50, -50)
+        print(self.rect)
 
     def update(self, pressed_keys, mouse):
 
         self.animate()
+        self.rotate(mouse.get_pos())
         # move player
         if pressed_keys[K_w]:
             self.rect.move_ip(0, -5)
@@ -87,9 +100,9 @@ class Enemy(pygame.sprite.Sprite):
         self.import_assets()
         self.frame_index = 0
 
-
-        enemy_image = pygame.transform.scale(pygame.image.load("images/zombie/idle/skeleton-idle_0.png").convert_alpha(),
-                                             (75, 75))
+        enemy_image = pygame.transform.scale(
+            pygame.image.load("images/zombie/idle/skeleton-idle_0.png").convert_alpha(),
+            (75, 75))
         self.surf = enemy_image
         # self.surf.fill((255, 255, 255))
 
@@ -105,9 +118,6 @@ class Enemy(pygame.sprite.Sprite):
         options = (option1, option2)
         # choose sides randomly
         self.rect = self.surf.get_rect(center=options[random.randint(0, 1)])
-
-        self.rect.width = 50
-        self.rect.height = 50
 
         self.speed = random.randint(2, 3)
         self.animations_speed = 0.1 * self.speed
@@ -128,7 +138,10 @@ class Enemy(pygame.sprite.Sprite):
         if self.frame_index >= len(animation):
             self.frame_index = 0
 
-        self.surf = pygame.transform.scale(animation[int(self.frame_index)], (75, 75))
+        self.surf = pygame.transform.scale(animation[int(self.frame_index)], (75, 75)).convert_alpha()
+        self.original_image = self.surf
+        mask = pygame.mask.from_surface(self.surf)
+        self.rect = mask.get_rect(center=self.rect.center)
 
     def update(self, player_position, distance=0):
         self.animate()
@@ -334,10 +347,10 @@ class Game():
 
         # pygame.draw.circle(screen, (255, 255, 255), self.player.rect[:2],
         #                    distance_points(self.player.rect[:2], self.dummy.rect[:2]))
-        point = find_point_circle(self.player.rect[:2], self.dummy.rect[:2], self.dummy.speed,
-                                  distance_points(self.player.rect[:2], self.dummy.rect[:2]))
+        # point = find_point_circle(self.player.rect[:2], self.dummy.rect[:2], self.dummy.speed,
+        #                           distance_points(self.player.rect[:2], self.dummy.rect[:2]))
 
-        # pygame.draw.rect(screen, (10, 200, 140), point + (25, 25))
+        pygame.draw.rect(self.screen, (10, 200, 140), self.player.rect)
         pygame.display.flip()
 
 
@@ -357,7 +370,7 @@ def main():
         game.run_logic()
         game.display_frame()
         clock.tick(60)
-        # print(clock.get_fps())
+        print(clock.get_fps())
 
     pygame.quit()
 
